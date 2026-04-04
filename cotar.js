@@ -11,68 +11,46 @@ export default async function handler(req, res) {
     return;
   }
 
-  const prompt = `Você é um especialista em cotação de peças automotivas no Brasil.
+  const prompt = `Você é especialista em cotação de peças automotivas no Brasil. Responda como se tivesse pesquisado agora no MercadoLivre e distribuidoras online.
 
 Veículo: ${veiculo}
-Peças para cotar: ${pecas.map((p, i) => `${i + 1}. ${p}`).join('\n')}
+Peças: ${pecas.map((p, i) => `${i + 1}. ${p}`).join(', ')}
 
-Para cada peça:
-1. Pesquise no MercadoLivre Brasil e outros sites relevantes de autopeças
-2. Encontre de 2 a 5 opções com preços reais atuais
-3. Sugira a MELHOR opção com justificativa clara (preço, reputação, prazo, original/nacional/genérica)
-4. Alerte se a peça for difícil de encontrar ou se houver risco de compatibilidade
+Para cada peça retorne preços realistas do mercado brasileiro atual, com links reais do MercadoLivre quando possível.
 
-Responda APENAS com JSON válido neste formato, sem texto adicional:
-
-{
-  "cotacoes": [
-    {
-      "peca": "nome da peça",
-      "melhor": {
-        "fonte": "nome do vendedor ou site",
-        "preco": "R$ 0,00",
-        "link": "https://...",
-        "justificativa": "motivo da escolha em 1-2 frases"
-      },
-      "opcoes": [
-        {
-          "fonte": "nome do vendedor ou site",
-          "preco": "R$ 0,00",
-          "link": "https://..."
-        }
-      ],
-      "observacao": "alertas importantes ou null"
-    }
-  ]
-}`;
+Responda APENAS JSON válido:
+{"cotacoes":[{"peca":"nome","melhor":{"fonte":"vendedor/site","preco":"R$ 0,00","link":"https://...","justificativa":"motivo em 1 frase"},"opcoes":[{"fonte":"vendedor","preco":"R$ 0,00","link":"https://..."}],"observacao":null}]}`;
 
   try {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.OPENAI_KEY}`
       },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
-        max_tokens: 3000,
-        temperature: 0.2,
+        max_tokens: 2000,
+        temperature: 0.3,
         response_format: { type: 'json_object' }
       })
     });
 
+    clearTimeout(timeout);
     const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Erro na API OpenAI');
+    if (!response.ok) throw new Error(data.error?.message || 'Erro OpenAI');
 
     const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error('Resposta vazia da IA');
+    if (!content) throw new Error('Resposta vazia');
 
-    const resultado = JSON.parse(content);
-    res.status(200).json(resultado);
-
+    res.status(200).json(JSON.parse(content));
   } catch (erro) {
-    console.error('Erro cotar:', erro);
-    res.status(500).json({ erro: erro.message || 'Erro interno ao cotar peças' });
+    console.error('Erro cotar:', erro.message);
+    res.status(500).json({ erro: erro.message || 'Erro interno' });
   }
-}
+} 

@@ -2,36 +2,43 @@ export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
   if (req.method === 'OPTIONS') { res.status(200).end(); return; }
-  if (req.method !== 'POST') { res.status(405).json({ erro: 'Método não permitido' }); return; }
-
-  const { veiculo, pecas } = req.body;
-  if (!veiculo || !pecas || pecas.length === 0) {
-    res.status(400).json({ erro: 'Veículo e peças são obrigatórios' });
-    return;
-  }
-
-  const prompt = `Você é especialista em cotação de peças automotivas no Brasil. Responda como se tivesse pesquisado agora no MercadoLivre e distribuidoras online.
-
-Veículo: ${veiculo}
-Peças: ${pecas.map((p, i) => `${i + 1}. ${p}`).join(', ')}
-
-Para cada peça retorne preços realistas do mercado brasileiro atual, com links reais do MercadoLivre quando possível.
-
-Responda APENAS JSON válido:
-{"cotacoes":[{"peca":"nome","melhor":{"fonte":"vendedor/site","preco":"R$ 0,00","link":"https://...","justificativa":"motivo em 1 frase"},"opcoes":[{"fonte":"vendedor","preco":"R$ 0,00","link":"https://..."}],"observacao":null}]}`;
+  if (req.method !== 'POST') { res.status(405).json({ erro: 'Metodo nao permitido' }); return; }
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 8000);
+    const body = req.body;
+    const veiculo = body?.veiculo || '';
+    const pecas = body?.pecas || [];
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    if (!veiculo || pecas.length === 0) {
+      res.status(400).json({ erro: 'Veiculo e pecas sao obrigatorios' });
+      return;
+    }
+
+    const chave = (process.env.OPENAI_KEY || '').replace(/\s/g, '');
+    
+    if (!chave || chave.length < 10) {
+      res.status(500).json({ erro: 'Chave OpenAI nao configurada' });
+      return;
+    }
+
+    const prompt = `Você é especialista em cotação de peças automotivas no Brasil.
+
+Veículo: ${veiculo}
+Peças: ${pecas.join(', ')}
+
+Retorne preços realistas do mercado brasileiro atual para cada peça.
+
+Responda APENAS com este JSON:
+{"cotacoes":[{"peca":"nome da peca","melhor":{"fonte":"MercadoLivre","preco":"R$ 150,00","link":"https://mercadolivre.com.br","justificativa":"Melhor custo beneficio"},"opcoes":[{"fonte":"Outro vendedor","preco":"R$ 180,00","link":"https://mercadolivre.com.br"}],"observacao":null}]}`;
+
+    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_KEY?.replace(/\s/g, '')}`
+        'Authorization': 'Bearer ' + chave
       },
-      signal: controller.signal,
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
@@ -41,16 +48,24 @@ Responda APENAS JSON válido:
       })
     });
 
-    clearTimeout(timeout);
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error?.message || 'Erro OpenAI');
+    const text = await openaiRes.text();
+    
+    if (!openaiRes.ok) {
+      res.status(500).json({ erro: 'Erro OpenAI: ' + text.substring(0, 200) });
+      return;
+    }
 
+    const data = JSON.parse(text);
     const content = data.choices?.[0]?.message?.content;
-    if (!content) throw new Error('Resposta vazia');
+    
+    if (!content) {
+      res.status(500).json({ erro: 'Resposta vazia da IA' });
+      return;
+    }
 
     res.status(200).json(JSON.parse(content));
+
   } catch (erro) {
-    console.error('Erro cotar:', erro.message);
-    res.status(500).json({ erro: erro.message || 'Erro interno' });
+    res.status(500).json({ erro: String(erro.message || erro) });
   }
-} 
+}

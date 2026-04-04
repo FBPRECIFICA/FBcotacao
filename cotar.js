@@ -29,7 +29,7 @@ Responda APENAS JSON válido:
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${process.env.OPENAI_KEY}`
+        'Authorization': `Bearer ${process.env.OPENAI_KEY?.replace(/\s/g, '')}`
       },
       signal: controller.signal,
       body: JSON.stringify({

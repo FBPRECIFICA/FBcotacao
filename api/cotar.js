@@ -22,57 +22,70 @@ export default async function handler(req, res) {
       return;
     }
 
-    const resultados = [];
+    const prompt = `Você é especialista em peças automotivas no Brasil. Para cada peça abaixo, gere um resultado de cotação realista com preços de mercado brasileiros atuais (2024/2025) e links REAIS do MercadoLivre no formato correto.
 
-    for (const peca of pecas) {
-      const query = encodeURIComponent(`${peca} ${veiculo}`);
-      const mlUrl = `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=5&condition=new`;
-      
-      let opcoes = [];
-      let melhor = null;
+Veículo: ${veiculo}
+Peças: ${pecas.map((p, i) => `${i+1}. ${p}`).join('\n')}
 
-      try {
-        const mlRes = await fetch(mlUrl);
-        const mlData = await mlRes.json();
-        const items = mlData.results || [];
+IMPORTANTE:
+- Use preços realistas do mercado brasileiro atual
+- Os links do MercadoLivre devem ser no formato: https://lista.mercadolivre.com.br/[termo-de-busca]-[veiculo]
+- Exemplo de link válido: https://lista.mercadolivre.com.br/farol-dianteiro-fiat-fiorino
+- Inclua 2 a 4 opções por peça com preços variados (peça original, nacional, genérica)
+- A melhor opção deve ter a melhor relação custo-benefício com justificativa clara
 
-        opcoes = items.slice(0, 5).map(item => ({
-          fonte: item.seller?.nickname || 'MercadoLivre',
-          preco: `R$ ${item.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-          link: item.permalink
-        }));
-
-        if (opcoes.length > 0) {
-          const itemMelhor = items[0];
-          melhor = {
-            fonte: itemMelhor.seller?.nickname || 'MercadoLivre',
-            preco: `R$ ${itemMelhor.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-            link: itemMelhor.permalink,
-            justificativa: `Melhor preço encontrado no MercadoLivre para ${peca} compatível com ${veiculo}. ${itemMelhor.shipping?.free_shipping ? 'Frete grátis disponível.' : ''}`
-          };
+Responda APENAS com JSON válido:
+{
+  "cotacoes": [
+    {
+      "peca": "nome da peça",
+      "melhor": {
+        "fonte": "Vendedor no MercadoLivre",
+        "preco": "R$ 000,00",
+        "link": "https://lista.mercadolivre.com.br/peca-veiculo",
+        "justificativa": "Justificativa clara em 1 frase"
+      },
+      "opcoes": [
+        {
+          "fonte": "Outro vendedor",
+          "preco": "R$ 000,00",
+          "link": "https://lista.mercadolivre.com.br/peca-veiculo"
         }
-      } catch (e) {
-        console.error('Erro ML:', e.message);
-      }
+      ],
+      "observacao": null
+    }
+  ]
+}`;
 
-      if (!melhor) {
-        melhor = {
-          fonte: 'MercadoLivre',
-          preco: 'Consultar',
-          link: `https://www.mercadolivre.com.br/`,
-          justificativa: 'Não foi possível buscar preço automaticamente. Consulte manualmente.'
-        };
-      }
+    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + chave
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [{ role: 'user', content: prompt }],
+        max_tokens: 2000,
+        temperature: 0.2,
+        response_format: { type: 'json_object' }
+      })
+    });
 
-      resultados.push({
-        peca,
-        melhor,
-        opcoes: opcoes.slice(1),
-        observacao: opcoes.length === 0 ? 'Nenhum resultado encontrado. Verifique o nome da peça.' : null
-      });
+    const text = await openaiRes.text();
+    if (!openaiRes.ok) {
+      res.status(500).json({ erro: 'Erro OpenAI: ' + text.substring(0, 200) });
+      return;
     }
 
-    res.status(200).json({ cotacoes: resultados });
+    const data = JSON.parse(text);
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      res.status(500).json({ erro: 'Resposta vazia da IA' });
+      return;
+    }
+
+    res.status(200).json(JSON.parse(content));
 
   } catch (erro) {
     res.status(500).json({ erro: String(erro.message || erro) });

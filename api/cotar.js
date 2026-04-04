@@ -17,53 +17,62 @@ export default async function handler(req, res) {
     }
 
     const chave = (process.env.OPENAI_KEY || '').replace(/\s/g, '');
-    
     if (!chave || chave.length < 10) {
       res.status(500).json({ erro: 'Chave OpenAI nao configurada' });
       return;
     }
 
-    const prompt = `Você é especialista em cotação de peças automotivas no Brasil.
+    const resultados = [];
 
-Veículo: ${veiculo}
-Peças: ${pecas.join(', ')}
+    for (const peca of pecas) {
+      const query = encodeURIComponent(`${peca} ${veiculo}`);
+      const mlUrl = `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=5&condition=new`;
+      
+      let opcoes = [];
+      let melhor = null;
 
-Retorne preços realistas do mercado brasileiro atual para cada peça.
+      try {
+        const mlRes = await fetch(mlUrl);
+        const mlData = await mlRes.json();
+        const items = mlData.results || [];
 
-Responda APENAS com este JSON:
-{"cotacoes":[{"peca":"nome da peca","melhor":{"fonte":"MercadoLivre","preco":"R$ 150,00","link":"https://mercadolivre.com.br","justificativa":"Melhor custo beneficio"},"opcoes":[{"fonte":"Outro vendedor","preco":"R$ 180,00","link":"https://mercadolivre.com.br"}],"observacao":null}]}`;
+        opcoes = items.slice(0, 5).map(item => ({
+          fonte: item.seller?.nickname || 'MercadoLivre',
+          preco: `R$ ${item.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+          link: item.permalink
+        }));
 
-    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': 'Bearer ' + chave
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        messages: [{ role: 'user', content: prompt }],
-        max_tokens: 2000,
-        temperature: 0.3,
-        response_format: { type: 'json_object' }
-      })
-    });
+        if (opcoes.length > 0) {
+          const itemMelhor = items[0];
+          melhor = {
+            fonte: itemMelhor.seller?.nickname || 'MercadoLivre',
+            preco: `R$ ${itemMelhor.price?.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
+            link: itemMelhor.permalink,
+            justificativa: `Melhor preço encontrado no MercadoLivre para ${peca} compatível com ${veiculo}. ${itemMelhor.shipping?.free_shipping ? 'Frete grátis disponível.' : ''}`
+          };
+        }
+      } catch (e) {
+        console.error('Erro ML:', e.message);
+      }
 
-    const text = await openaiRes.text();
-    
-    if (!openaiRes.ok) {
-      res.status(500).json({ erro: 'Erro OpenAI: ' + text.substring(0, 200) });
-      return;
+      if (!melhor) {
+        melhor = {
+          fonte: 'MercadoLivre',
+          preco: 'Consultar',
+          link: `https://www.mercadolivre.com.br/`,
+          justificativa: 'Não foi possível buscar preço automaticamente. Consulte manualmente.'
+        };
+      }
+
+      resultados.push({
+        peca,
+        melhor,
+        opcoes: opcoes.slice(1),
+        observacao: opcoes.length === 0 ? 'Nenhum resultado encontrado. Verifique o nome da peça.' : null
+      });
     }
 
-    const data = JSON.parse(text);
-    const content = data.choices?.[0]?.message?.content;
-    
-    if (!content) {
-      res.status(500).json({ erro: 'Resposta vazia da IA' });
-      return;
-    }
-
-    res.status(200).json(JSON.parse(content));
+    res.status(200).json({ cotacoes: resultados });
 
   } catch (erro) {
     res.status(500).json({ erro: String(erro.message || erro) });

@@ -13,31 +13,13 @@ export default async function handler(req, res) {
       return;
     }
 
-    const clientId = process.env.ML_CLIENT_ID;
-    const clientSecret = (process.env.ML_CLIENT_SECRET || '').replace(/\s/g, '');
-
-    // Pegar token do ML
-    const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`
-    });
-
-    const tokenData = await tokenRes.json();
-    const token = tokenData.access_token;
-
-    if (!token) {
-      res.status(500).json({ erro: 'Erro ao autenticar no MercadoLivre: ' + JSON.stringify(tokenData) });
-      return;
-    }
-
     const resultados = [];
 
     for (const peca of pecas) {
       const query = encodeURIComponent(`${peca} ${veiculo}`);
       const mlRes = await fetch(
         `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=5&condition=new`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
+        { headers: { 'User-Agent': 'Mozilla/5.0' } }
       );
       const mlData = await mlRes.json();
       const items = mlData.results || [];
@@ -50,19 +32,19 @@ export default async function handler(req, res) {
 
       const melhor = opcoes.length > 0 ? {
         ...opcoes[0],
-        justificativa: `Menor preço encontrado no MercadoLivre para ${peca} compatível com ${veiculo}.${items[0]?.shipping?.free_shipping ? ' Frete grátis.' : ''}`
+        justificativa: `Menor preço no MercadoLivre para ${peca} — ${veiculo}.${items[0]?.shipping?.free_shipping ? ' Frete grátis.' : ''}`
       } : {
         fonte: 'MercadoLivre',
         preco: 'Não encontrado',
-        link: `https://lista.mercadolivre.com.br/${encodeURIComponent(peca + ' ' + veiculo)}`,
-        justificativa: 'Busca manual recomendada.'
+        link: `https://lista.mercadolivre.com.br/${query}`,
+        justificativa: 'Clique para buscar manualmente.'
       };
 
       resultados.push({
         peca,
         melhor,
         opcoes: opcoes.slice(1),
-        observacao: opcoes.length === 0 ? 'Nenhum resultado. Tente um nome diferente para a peça.' : null
+        observacao: opcoes.length === 0 ? 'Nenhum resultado. Tente um nome diferente.' : null
       });
     }
 

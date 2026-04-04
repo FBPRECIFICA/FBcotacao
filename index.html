@@ -184,8 +184,7 @@
   }
   function removerPeca(i) { pecas.splice(i, 1); renderPecas(); }
   function renderPecas() {
-    const list = document.getElementById('pecasList');
-    list.innerHTML = pecas.map((p, i) => `<div class="peca-item"><span class="peca-num">${i+1}</span><span>${p}</span><button class="btn-remove" onclick="removerPeca(${i})">×</button></div>`).join('');
+    document.getElementById('pecasList').innerHTML = pecas.map((p, i) => `<div class="peca-item"><span class="peca-num">${i+1}</span><span>${p}</span><button class="btn-remove" onclick="removerPeca(${i})">×</button></div>`).join('');
   }
   async function cotar() {
     hideError();

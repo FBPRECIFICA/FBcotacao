@@ -13,48 +13,81 @@ export default async function handler(req, res) {
       return;
     }
 
-    const token = (process.env.ML_ACCESS_TOKEN || '').trim();
-    if (!token) {
-      res.status(500).json({ erro: 'Token ML nao configurado' });
+    const chave = (process.env.OPENAI_KEY || '').replace(/\s/g, '');
+    if (!chave || chave.length < 10) {
+      res.status(500).json({ erro: 'Chave OpenAI nao configurada' });
       return;
     }
 
-    const resultados = [];
+    const prompt = `Você é um especialista em cotação de peças automotivas no Brasil. 
+Preciso que você PESQUISE AGORA no MercadoLivre Brasil (mercadolivre.com.br) os preços reais das peças abaixo.
 
-    for (const peca of pecas) {
-      const query = encodeURIComponent(`${peca} ${veiculo}`);
-      const mlRes = await fetch(
-        `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=5&condition=new`,
-        { headers: { 'Authorization': `Bearer ${token}` } }
-      );
-      const mlData = await mlRes.json();
-      const items = mlData.results || [];
+Veículo: ${veiculo}
+Peças: ${pecas.map((p, i) => `${i+1}. ${p}`).join('\n')}
 
-      const opcoes = items.map(item => ({
-        fonte: item.seller?.nickname || 'Vendedor ML',
-        preco: `R$ ${Number(item.price).toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
-        link: item.permalink
-      }));
+Para cada peça:
+1. Busque no MercadoLivre Brasil o produto real
+2. Retorne o preço atual real encontrado
+3. Monte o link de busca no formato: https://lista.mercadolivre.com.br/[termo-separado-por-hifen]
+4. Indique qual é a melhor opção e por quê (preço, qualidade, frete grátis)
+5. Liste 2-3 opções com preços diferentes (original, nacional, genérica)
 
-      const melhor = opcoes.length > 0 ? {
-        ...opcoes[0],
-        justificativa: `Menor preço no MercadoLivre para ${peca} — ${veiculo}.${items[0]?.shipping?.free_shipping ? ' Frete grátis.' : ''}`
-      } : {
-        fonte: 'MercadoLivre',
-        preco: 'Não encontrado',
-        link: `https://lista.mercadolivre.com.br/${query}`,
-        justificativa: 'Clique para buscar manualmente.'
-      };
+IMPORTANTE: Use preços REAIS e atuais do mercado brasileiro de 2025. Não invente preços.
 
-      resultados.push({
-        peca,
-        melhor,
-        opcoes: opcoes.slice(1),
-        observacao: opcoes.length === 0 ? 'Nenhum resultado. Tente um nome diferente.' : null
-      });
+Responda APENAS com JSON válido:
+{
+  "cotacoes": [
+    {
+      "peca": "nome da peça",
+      "melhor": {
+        "fonte": "nome do vendedor ou marca",
+        "preco": "R$ 000,00",
+        "link": "https://lista.mercadolivre.com.br/peca-veiculo",
+        "justificativa": "motivo em 1 frase"
+      },
+      "opcoes": [
+        {"fonte": "vendedor 2", "preco": "R$ 000,00", "link": "https://lista.mercadolivre.com.br/peca-veiculo"}
+      ],
+      "observacao": null
+    }
+  ]
+}`;
+
+    const openaiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer ' + chave
+      },
+      body: JSON.stringify({
+        model: 'gpt-4o',
+        messages: [
+          {
+            role: 'system',
+            content: 'Você é especialista em peças automotivas no Brasil. Conhece preços reais do MercadoLivre e distribuidoras. Sempre retorna JSON válido com preços realistas e links funcionais do MercadoLivre.'
+          },
+          { role: 'user', content: prompt }
+        ],
+        max_tokens: 2000,
+        temperature: 0.1,
+        response_format: { type: 'json_object' }
+      })
+    });
+
+    const text = await openaiRes.text();
+    if (!openaiRes.ok) {
+      res.status(500).json({ erro: 'Erro OpenAI: ' + text.substring(0, 300) });
+      return;
     }
 
-    res.status(200).json({ cotacoes: resultados });
+    const data = JSON.parse(text);
+    const content = data.choices?.[0]?.message?.content;
+    if (!content) {
+      res.status(500).json({ erro: 'Resposta vazia da IA' });
+      return;
+    }
+
+    res.status(200).json(JSON.parse(content));
 
   } catch (erro) {
     res.status(500).json({ erro: String(erro.message || erro) });

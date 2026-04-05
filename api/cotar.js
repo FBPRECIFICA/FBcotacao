@@ -13,21 +13,9 @@ export default async function handler(req, res) {
       return;
     }
 
-    const clientId = (process.env.ML_CLIENT_ID || '').trim();
-    const clientSecret = (process.env.ML_CLIENT_SECRET || '').replace(/\s/g, '');
-
-    // Token via Client Credentials
-    const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
-      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`
-    });
-
-    const tokenData = await tokenRes.json();
-    const token = tokenData.access_token;
-
+    const token = (process.env.ML_ACCESS_TOKEN || '').trim();
     if (!token) {
-      res.status(500).json({ erro: 'Token ML falhou: ' + JSON.stringify(tokenData) });
+      res.status(500).json({ erro: 'Token ML nao configurado' });
       return;
     }
 

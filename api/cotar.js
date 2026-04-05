@@ -13,13 +13,31 @@ export default async function handler(req, res) {
       return;
     }
 
+    const clientId = (process.env.ML_CLIENT_ID || '').trim();
+    const clientSecret = (process.env.ML_CLIENT_SECRET || '').replace(/\s/g, '');
+
+    // Token via Client Credentials
+    const tokenRes = await fetch('https://api.mercadolibre.com/oauth/token', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Accept': 'application/json' },
+      body: `grant_type=client_credentials&client_id=${clientId}&client_secret=${clientSecret}`
+    });
+
+    const tokenData = await tokenRes.json();
+    const token = tokenData.access_token;
+
+    if (!token) {
+      res.status(500).json({ erro: 'Token ML falhou: ' + JSON.stringify(tokenData) });
+      return;
+    }
+
     const resultados = [];
 
     for (const peca of pecas) {
       const query = encodeURIComponent(`${peca} ${veiculo}`);
       const mlRes = await fetch(
         `https://api.mercadolibre.com/sites/MLB/search?q=${query}&limit=5&condition=new`,
-        { headers: { 'User-Agent': 'Mozilla/5.0' } }
+        { headers: { 'Authorization': `Bearer ${token}` } }
       );
       const mlData = await mlRes.json();
       const items = mlData.results || [];

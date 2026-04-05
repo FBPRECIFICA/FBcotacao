@@ -9,11 +9,11 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
       --bg: #0c0e0f; --surface: #131618; --card: #1a1e21; --border: #252a2e;
-      --accent: #00c27a; --accent2: #00a066; --accent-glow: rgba(0,194,122,0.12);
+      --accent: #00c27a; --accent-glow: rgba(0,194,122,0.12);
       --text: #eef0f0; --muted: #6b7580; --dim: #353c42;
       --warn: #f0b429; --danger: #e84040; --blue: #4a9eff;
     }
-    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; overflow-x: hidden; }
+    body { background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; min-height: 100vh; }
     body::before { content: ''; position: fixed; inset: 0; background-image: linear-gradient(rgba(0,194,122,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(0,194,122,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
     .wrap { position: relative; z-index: 1; max-width: 780px; margin: 0 auto; padding: 40px 24px 80px; }
     header { display: flex; align-items: center; gap: 16px; margin-bottom: 48px; }
@@ -25,9 +25,9 @@
     .placa-row { display: grid; grid-template-columns: 160px 1fr; gap: 16px; margin-bottom: 16px; }
     .field { display: flex; flex-direction: column; gap: 8px; }
     label { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; }
-    input, textarea { background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 12px 16px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%; }
-    input:focus, textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
-    input::placeholder, textarea::placeholder { color: var(--dim); }
+    input { background: var(--card); border: 1px solid var(--border); border-radius: 10px; color: var(--text); font-family: 'DM Sans', sans-serif; font-size: 15px; padding: 12px 16px; transition: border-color 0.2s, box-shadow 0.2s; outline: none; width: 100%; }
+    input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+    input::placeholder { color: var(--dim); }
     .placa-input { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 18px; text-transform: uppercase; letter-spacing: 0.1em; text-align: center; }
     .veiculo-badge { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; display: flex; align-items: center; gap: 10px; min-height: 48px; }
     .veiculo-badge .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--dim); flex-shrink: 0; transition: background 0.3s; }
@@ -59,32 +59,31 @@
     .results-wrap.active { display: block; }
     .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
     .results-header h2 { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--text); }
-    .btn-nova { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; font-weight: 500; padding: 8px 16px; transition: all 0.2s; }
+    .btn-nova { background: var(--card); border: 1px solid var(--border); border-radius: 8px; color: var(--muted); cursor: pointer; font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 8px 16px; transition: all 0.2s; }
     .btn-nova:hover { border-color: var(--accent); color: var(--accent); }
     .peca-result { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; margin-bottom: 16px; overflow: hidden; }
-    .peca-result-header { padding: 18px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
+    .peca-result-header { padding: 16px 24px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 12px; }
     .peca-result-header .num { font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; color: var(--accent); background: var(--accent-glow); border-radius: 6px; padding: 3px 10px; }
-    .peca-result-header h3 { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); flex: 1; }
-    .melhor-opcao { background: var(--card); border: 1px solid rgba(0,194,122,0.25); border-radius: 12px; padding: 20px 24px; margin: 20px 24px 0; position: relative; }
-    .melhor-badge { position: absolute; top: -10px; left: 20px; background: var(--accent); color: #000; font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; letter-spacing: 0.1em; padding: 3px 10px; border-radius: 20px; }
-    .melhor-opcao h4 { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
-    .melhor-preco { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); margin-bottom: 8px; }
-    .melhor-justificativa { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 12px; }
-    .btn-link { display: inline-flex; align-items: center; gap: 6px; background: var(--accent-glow); border: 1px solid rgba(0,194,122,0.3); border-radius: 8px; color: var(--accent); font-size: 13px; font-weight: 500; padding: 6px 14px; text-decoration: none; transition: all 0.2s; }
-    .btn-link:hover { background: var(--accent); color: #000; border-color: var(--accent); }
-    .outras-opcoes { padding: 16px 24px 20px; }
-    .outras-titulo { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 12px; }
-    .opcao-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-    .opcao-row:last-child { border-bottom: none; }
-    .opcao-fonte { font-size: 13px; color: var(--text); flex: 1; font-weight: 500; }
-    .opcao-preco { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); }
-    .opcao-link { font-size: 12px; color: var(--blue); text-decoration: none; padding: 4px 10px; border: 1px solid rgba(74,158,255,0.3); border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
-    .opcao-link:hover { background: rgba(74,158,255,0.1); }
-    .obs-ia { background: rgba(240,180,41,0.06); border: 1px solid rgba(240,180,41,0.2); border-radius: 10px; padding: 12px 16px; margin: 0 24px 20px; font-size: 13px; color: var(--warn); line-height: 1.5; }
-    .error-card { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.25); border-radius: 12px; padding: 20px 24px; margin-bottom: 16px; display: none; }
+    .peca-result-header h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); flex: 1; }
+    .links-section { padding: 20px 24px; }
+    .link-principal { background: var(--card); border: 1px solid rgba(0,194,122,0.25); border-radius: 12px; padding: 16px 20px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .link-principal-badge { font-family: 'Syne', sans-serif; font-size: 10px; font-weight: 800; color: #000; background: var(--accent); border-radius: 20px; padding: 3px 10px; white-space: nowrap; }
+    .link-principal-info { flex: 1; }
+    .link-principal-info h4 { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+    .link-principal-info p { font-size: 12px; color: var(--muted); line-height: 1.4; }
+    .btn-ver { display: inline-flex; align-items: center; gap: 6px; background: var(--accent); border: none; border-radius: 8px; color: #000; font-family: 'Syne', sans-serif; font-size: 12px; font-weight: 800; padding: 8px 16px; text-decoration: none; transition: all 0.2s; white-space: nowrap; cursor: pointer; }
+    .btn-ver:hover { background: #00d988; transform: translateY(-1px); }
+    .outras-titulo { font-size: 11px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; }
+    .link-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+    .link-row:last-child { border-bottom: none; }
+    .link-row-fonte { font-size: 13px; color: var(--text); flex: 1; font-weight: 500; }
+    .btn-link-pequeno { font-size: 12px; color: var(--accent); text-decoration: none; padding: 5px 12px; border: 1px solid rgba(0,194,122,0.3); border-radius: 6px; transition: all 0.2s; white-space: nowrap; }
+    .btn-link-pequeno:hover { background: var(--accent); color: #000; }
+    .obs-ia { background: rgba(240,180,41,0.06); border: 1px solid rgba(240,180,41,0.2); border-radius: 10px; padding: 10px 16px; margin: 0 24px 16px; font-size: 13px; color: var(--warn); }
+    .error-card { background: rgba(232,64,64,0.06); border: 1px solid rgba(232,64,64,0.25); border-radius: 12px; padding: 16px 24px; margin-bottom: 16px; display: none; }
     .error-card.active { display: block; }
     .error-card p { font-size: 14px; color: var(--danger); }
-    @media (max-width: 540px) { .placa-row { grid-template-columns: 1fr; } .form-card { padding: 20px; } .melhor-preco { font-size: 22px; } }
+    @media (max-width: 540px) { .placa-row { grid-template-columns: 1fr; } .form-card { padding: 20px; } .link-principal { flex-direction: column; align-items: flex-start; } }
   </style>
 </head>
 <body>
@@ -93,9 +92,10 @@
     <div class="logo-mark">FB</div>
     <div class="logo-text">
       <h1>FB Cotação</h1>
-      <span>MM ServiceCar — Cotação Inteligente de Peças</span>
+      <span>MM ServiceCar — Busca Inteligente de Peças</span>
     </div>
   </header>
+
   <div class="form-card" id="formCard">
     <div class="form-title">Identificar Veículo</div>
     <div class="placa-row">
@@ -113,10 +113,10 @@
     </div>
     <div class="field" style="margin-bottom:16px;">
       <label>Ou informe manualmente</label>
-      <input type="text" id="veiculoManual" placeholder="Ex: Fiat Fiorino 2025, VW Gol 2020..." />
+      <input type="text" id="veiculoManual" placeholder="Ex: Fiat Fiorino 2022, VW Gol 2020..." />
     </div>
     <div style="margin-top:24px;">
-      <div class="form-title">Peças para Cotar</div>
+      <div class="form-title">Peças para Buscar</div>
       <div class="pecas-list" id="pecasList"></div>
       <div class="add-peca-row">
         <input type="text" id="pecaInput" placeholder="Ex: Farol dianteiro esquerdo..." />
@@ -124,23 +124,27 @@
       </div>
     </div>
     <div class="error-card" id="errorCard"><p id="errorMsg"></p></div>
-    <button class="btn-cotar" id="btnCotar" onclick="cotar()">🔍 Cotar Peças com IA</button>
+    <button class="btn-cotar" onclick="cotar()">🔍 Buscar Peças com IA</button>
   </div>
+
   <div class="loading-card" id="loadingCard">
     <div class="spinner"></div>
-    <h3>Consultando o mercado...</h3>
-    <p>A IA está buscando os melhores preços para você</p>
+    <h3>Montando links de busca...</h3>
+    <p>A IA está preparando os melhores termos de pesquisa para cada peça</p>
   </div>
+
   <div class="results-wrap" id="resultsWrap">
     <div class="results-header">
-      <h2>Resultado da Cotação</h2>
-      <button class="btn-nova" onclick="novaCotacao()">← Nova Cotação</button>
+      <h2>Links de Busca</h2>
+      <button class="btn-nova" onclick="novaCotacao()">← Nova Busca</button>
     </div>
     <div id="resultsContent"></div>
   </div>
 </div>
+
 <script>
   let pecas = [], veiculoIdentificado = '', placaTimer = null;
+
   document.getElementById('placaInput').addEventListener('input', function() {
     const val = this.value.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
     this.value = val;
@@ -148,7 +152,11 @@
     if (val.length >= 7) { placaTimer = setTimeout(() => buscarPlaca(val), 600); }
     else { resetVeiculoBadge(); }
   });
-  document.getElementById('pecaInput').addEventListener('keydown', function(e) { if (e.key === 'Enter') adicionarPeca(); });
+
+  document.getElementById('pecaInput').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') adicionarPeca();
+  });
+
   async function buscarPlaca(placa) {
     const badge = document.getElementById('veiculoBadge');
     badge.className = 'veiculo-badge';
@@ -167,12 +175,14 @@
       } else { resetVeiculoBadge('Placa não encontrada'); }
     } catch { resetVeiculoBadge('Erro ao consultar placa'); }
   }
+
   function resetVeiculoBadge(msg = 'Digite a placa para identificar') {
     veiculoIdentificado = '';
     const badge = document.getElementById('veiculoBadge');
     badge.className = 'veiculo-badge';
     badge.innerHTML = `<div class="dot"></div><span>${msg}</span>`;
   }
+
   function adicionarPeca() {
     const input = document.getElementById('pecaInput');
     const val = input.value.trim();
@@ -182,44 +192,85 @@
     renderPecas();
     input.focus();
   }
+
   function removerPeca(i) { pecas.splice(i, 1); renderPecas(); }
+
   function renderPecas() {
-    document.getElementById('pecasList').innerHTML = pecas.map((p, i) => `<div class="peca-item"><span class="peca-num">${i+1}</span><span>${p}</span><button class="btn-remove" onclick="removerPeca(${i})">×</button></div>`).join('');
+    document.getElementById('pecasList').innerHTML = pecas.map((p, i) =>
+      `<div class="peca-item"><span class="peca-num">${i+1}</span><span>${p}</span><button class="btn-remove" onclick="removerPeca(${i})">×</button></div>`
+    ).join('');
   }
+
   async function cotar() {
     hideError();
     const veiculo = veiculoIdentificado || document.getElementById('veiculoManual').value.trim();
     if (!veiculo) return showError('Informe a placa ou o veículo manualmente.');
-    if (pecas.length === 0) return showError('Adicione ao menos uma peça para cotar.');
+    if (pecas.length === 0) return showError('Adicione ao menos uma peça.');
     document.getElementById('formCard').style.display = 'none';
     document.getElementById('loadingCard').classList.add('active');
-    document.getElementById('resultsWrap').classList.remove('active');
     try {
-      const res = await fetch('/api/cotar', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ veiculo, pecas }) });
+      const res = await fetch('/api/cotar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ veiculo, pecas })
+      });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.erro || 'Erro na cotação');
+      if (!res.ok) throw new Error(data.erro || 'Erro na busca');
       renderResultados(data, veiculo);
     } catch (err) {
       document.getElementById('loadingCard').classList.remove('active');
       document.getElementById('formCard').style.display = 'block';
-      showError('Erro ao cotar: ' + err.message);
+      showError('Erro: ' + err.message);
     }
   }
+
   function renderResultados(data, veiculo) {
     document.getElementById('loadingCard').classList.remove('active');
     const content = document.getElementById('resultsContent');
-    content.innerHTML = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;"><span style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Veículo</span><span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text);font-size:15px;">${veiculo}</span><span style="font-size:12px;color:var(--muted);margin-left:auto;">${data.cotacoes?.length||0} peça(s)</span></div>`;
-    if (!data.cotacoes || data.cotacoes.length === 0) {
-      content.innerHTML += '<p style="color:var(--muted);text-align:center;padding:40px 0;">Nenhum resultado encontrado.</p>';
-    } else {
-      data.cotacoes.forEach((c, i) => {
-        const outrasHTML = (c.opcoes||[]).map(op => `<div class="opcao-row"><span class="opcao-fonte">${op.fonte}</span><span class="opcao-preco">${op.preco}</span>${op.link?`<a href="${op.link}" target="_blank" class="opcao-link">Ver →</a>`:''}</div>`).join('');
-        const obsHTML = c.observacao ? `<div class="obs-ia"><strong>⚠ Atenção:</strong> ${c.observacao}</div>` : '';
-        content.innerHTML += `<div class="peca-result"><div class="peca-result-header"><span class="num">${i+1}</span><h3>${c.peca}</h3></div><div class="melhor-opcao"><span class="melhor-badge">✓ MELHOR OPÇÃO</span><h4>${c.melhor.fonte}</h4><div class="melhor-preco">${c.melhor.preco}</div><p class="melhor-justificativa">${c.melhor.justificativa}</p>${c.melhor.link?`<a href="${c.melhor.link}" target="_blank" class="btn-link">🔗 Ver no site</a>`:''}</div>${c.opcoes&&c.opcoes.length>0?`<div class="outras-opcoes"><div class="outras-titulo">Outras opções</div>${outrasHTML}</div>`:''}${obsHTML}</div>`;
-      });
-    }
+
+    content.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px 20px;margin-bottom:20px;display:flex;align-items:center;gap:10px;">
+        <span style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:600;">Veículo</span>
+        <span style="font-family:'Syne',sans-serif;font-weight:700;color:var(--text);font-size:15px;">${veiculo}</span>
+        <span style="font-size:12px;color:var(--muted);margin-left:auto;">${data.cotacoes?.length||0} peça(s)</span>
+      </div>`;
+
+    (data.cotacoes || []).forEach((c, i) => {
+      const outrasHTML = (c.opcoes || []).map(op => `
+        <div class="link-row">
+          <span class="link-row-fonte">${op.fonte}</span>
+          <a href="${op.link}" target="_blank" class="btn-link-pequeno">Buscar →</a>
+        </div>`).join('');
+
+      const obsHTML = c.observacao ? `<div class="obs-ia">⚠ ${c.observacao}</div>` : '';
+
+      content.innerHTML += `
+        <div class="peca-result">
+          <div class="peca-result-header">
+            <span class="num">${i+1}</span>
+            <h3>${c.peca}</h3>
+          </div>
+          <div class="links-section">
+            <div class="link-principal">
+              <span class="link-principal-badge">✓ RECOMENDADO</span>
+              <div class="link-principal-info">
+                <h4>${c.melhor.fonte}</h4>
+                <p>${c.melhor.justificativa}</p>
+              </div>
+              <a href="${c.melhor.link}" target="_blank" class="btn-ver">🔍 Ver no ML</a>
+            </div>
+            ${c.opcoes && c.opcoes.length > 0 ? `
+              <div class="outras-titulo">Outras buscas</div>
+              ${outrasHTML}
+            ` : ''}
+          </div>
+          ${obsHTML}
+        </div>`;
+    });
+
     document.getElementById('resultsWrap').classList.add('active');
   }
+
   function novaCotacao() {
     document.getElementById('resultsWrap').classList.remove('active');
     document.getElementById('formCard').style.display = 'block';
@@ -228,6 +279,7 @@
     document.getElementById('veiculoManual').value = '';
     resetVeiculoBadge(); veiculoIdentificado = '';
   }
+
   function showError(msg) { document.getElementById('errorMsg').textContent = msg; document.getElementById('errorCard').classList.add('active'); }
   function hideError() { document.getElementById('errorCard').classList.remove('active'); }
 </script>
